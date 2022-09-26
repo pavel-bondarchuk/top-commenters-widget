@@ -29,7 +29,10 @@ class WP_Widget_Plugin extends WP_Widget {
 		$instance['comment_qty_show']    = ! empty( $instance['comment_qty_show'] ) ? $instance['comment_qty_show'] : "";
 		$instance['users_zero_comments'] = ! empty( $instance['users_zero_comments'] ) ? $instance['users_zero_comments'] : "";
 		$users_in_top                    = ! empty( $instance['users_in_top'] ) ? $instance['users_in_top'] : "";
+		$select_users_roles              = isset( $instance['select_users_roles'] ) ? $instance['select_users_roles'] : '';
+		
 		?>
+		
       <p>
           <label for="<?php echo $this->get_field_id( 'comment_qty_show' ) ?>"><?php echo __( 'Show quantity comments in list', 'tc-wp-widget' ); ?></label>
           <input class="checkbox" type="checkbox" <?php checked( $instance['comment_qty_show'], 'on' ); ?>
@@ -52,6 +55,19 @@ class WP_Widget_Plugin extends WP_Widget {
                  id="<?php echo $this->get_field_id( 'users_zero_comments' ); ?>"
                  name="<?php echo $this->get_field_name( 'users_zero_comments' ); ?>"/>
       </p>
+	  <p>
+			<label for="<?php echo $this->get_field_id( 'select_users_roles' ) ?>"><?php echo __( 'Users Roles', 'tc-wp-widget' ); ?></label>
+			<select name="<?php echo $this->get_field_name( 'select_users_roles' ); ?>[]" id="<?php echo $this->get_field_id( 'select_users_roles' ); ?>" class="widefat" multiple>
+				<?php $options = get_editable_roles();
+				foreach ( $options as $key => $option ) {
+					$selected = implode(',', (array)$select_users_roles);
+					$select = in_array( $option["name"], (array)$select_users_roles  ) ? ' selected' : null;
+					echo '<option value="' . $option['name'] . '" id="' . esc_attr( $key ) . '" '. $select . '>'. $option['name'] . '</option>';
+				}
+				?>
+			</select>
+			
+		</p>
 		<?php
 
 	}
@@ -63,11 +79,12 @@ class WP_Widget_Plugin extends WP_Widget {
 		$comment_qty_show    = $instance['comment_qty_show'] ? 'true' : 'false';
 		$users_zero_comments = $instance['users_zero_comments'] ? 'true' : 'false';
 		$users_in_top        = $instance['users_in_top'];
+		$select_users_roles  = isset( $instance['select_users_roles'] ) ? $instance['select_users_roles'] : '';
 
 		echo $before_widget;
 
 		$args  = array(
-				'role'   => '',
+				'role__in'   => $select_users_roles,
 				'number' => $users_in_top
 		);
 		$users = new WP_User_Query( $args );
@@ -108,11 +125,12 @@ class WP_Widget_Plugin extends WP_Widget {
 	}
 
 	public function update( $new_instance, $old_instance ) {
-		// save or update widget instance value
+		$instance = $old_instance;
 		$instance                        = array();
-		$instance['comment_qty_show']    = $new_instance['comment_qty_show'] ? 'on' : null;
-		$instance['users_zero_comments'] = $new_instance['users_zero_comments'] ? 'on' : null;
+		$instance['comment_qty_show']    = $new_instance['comment_qty_show'] ? 'on' : false;
+		$instance['users_zero_comments'] = $new_instance['users_zero_comments'] ? 'on' : false;
 		$instance['users_in_top']        = isset( $new_instance['users_in_top'] ) ? strip_tags( $new_instance['users_in_top'] ) : '';
+		$instance['select_users_roles']  = isset( $new_instance['select_users_roles'] ) ? esc_sql( $new_instance['select_users_roles'] ) : '';
 
 		return $instance;
 
